@@ -6,6 +6,25 @@ Axiom is a universal, schema-based runtime designed to manage, compose, and exec
 ## 2. System Architecture
 Axiom operates as a foundational layer underneath enterprise applications and AI frameworks. It consists of six distinct layers:
 
+```mermaid
+graph TD
+    APP[Layer 6: Applications] --> FW[Frameworks]
+    FW --> ADAPT[Layer 5: Adapters]
+    
+    subgraph Axiom Core
+        ADAPT --> RT[Layer 4: Runtime]
+        RT --> REG[Layer 3: Registry]
+        REG --> SCH[Layer 2: Schema]
+        SCH --> ST[Layer 1: Storage]
+    end
+    
+    RT -. "Yields Execution Plan" .-> ADAPT
+    ADAPT --> PROV[Providers / Models]
+    
+    classDef core fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    class RT,REG,SCH,ST core
+```
+
 1. **Layer 1: Storage** - Portable storage format (File System, Git, Database) for schemas.
 2. **Layer 2: Schema** - JSON/YAML definitions specifying inputs, metadata, and structural composition.
 3. **Layer 3: Registry** - The indexing, resolution, and validation engine. Loads items from storage into memory.
