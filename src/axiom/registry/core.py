@@ -11,6 +11,7 @@ class AxiomRegistry:
         
         self._by_type: Dict[str, List[str]] = {}
         self._by_capability: Dict[str, List[str]] = {}
+        self._by_tag: Dict[str, List[str]] = {}
 
     def load_directory(self, path: str):
         raw_schemas = SchemaLoader.scan_directory(path)
@@ -53,6 +54,9 @@ class AxiomRegistry:
         if model.capability:
             for cap in model.capability:
                 self._by_capability.setdefault(cap, []).append(model.id)
+        if getattr(model, "tags", None):
+            for tag in model.tags:
+                self._by_tag.setdefault(tag, []).append(model.id)
                 
         return model
 
@@ -75,3 +79,19 @@ class AxiomRegistry:
     def find_by_capability(self, capability: str) -> List[BaseAxiomModel]:
         ids = self._by_capability.get(capability, [])
         return [self.get(i) for i in ids if self.get(i)]
+
+    def query(self, type: Optional[str] = None, capability: Optional[str] = None, 
+              tag: Optional[str] = None, id_contains: Optional[str] = None) -> List[BaseAxiomModel]:
+        """Provides intuitive multi-dimensional intersection search returning securely determined latest semantic versions."""
+        base_set = set(self._items.keys())
+        
+        if type:
+            base_set &= set(self._by_type.get(type, []))
+        if capability:
+            base_set &= set(self._by_capability.get(capability, []))
+        if tag:
+            base_set &= set(self._by_tag.get(tag, []))
+        if id_contains:
+            base_set = {i for i in base_set if id_contains in i}
+            
+        return [self.get(i) for i in base_set if self.get(i)]

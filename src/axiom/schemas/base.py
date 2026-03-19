@@ -17,3 +17,4 @@ class BaseAxiomModel(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Custom metadata")
     config: Optional[AxiomConfig] = Field(None, description="Execution or model configuration")
     capability: Optional[List[str]] = Field(None, description="Tags describing capabilities matching the indexer")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Arbitrary organizational labels matching the indexer")
