@@ -17,6 +17,11 @@ class AxiomRegistry:
         for raw in raw_schemas:
             self.register(raw)
             
+    def load_remote(self, url: str) -> BaseAxiomModel:
+        """Fetches and securely registers a remote HTTP/HTTPS schema payload offline."""
+        raw_schema = SchemaLoader.fetch_remote(url)
+        return self.register(raw_schema)
+            
     def _parse_version(self, version_str: str) -> tuple:
         try:
             return tuple(map(int, version_str.split(".")))
