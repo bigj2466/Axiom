@@ -30,8 +30,8 @@ def setup_registry_and_plan():
 
 def test_openai_adapter_translation():
     os.environ["AXIOM_MOCK_OPENAI"] = "1"
-    r, plan = setup_registry_and_plan()
-    adapter = OpenAIAdapter(r)
+    _, plan = setup_registry_and_plan()
+    adapter = OpenAIAdapter()
     adapter.ingest(plan)
     
     results = adapter.execute()
@@ -44,8 +44,8 @@ def test_openai_adapter_translation():
     assert mocked_call["kwargs"]["temperature"] == 0.0
 
 def test_langchain_adapter_translation():
-    r, plan = setup_registry_and_plan()
-    adapter = LangchainAdapter(r)
+    _, plan = setup_registry_and_plan()
+    adapter = LangchainAdapter()
     adapter.ingest(plan)
     
     try:
@@ -55,5 +55,5 @@ def test_langchain_adapter_translation():
         
     chain = adapter.to_chain()
     messages = chain.messages
-    assert messages[0].prompt.template == "You are a translator. Translate to {language}."
-    assert messages[1].prompt.template == "{text}"
+    assert messages[0].prompt.template == "You are a translator. Translate to French."
+    assert messages[1].prompt.template == "Hello world"

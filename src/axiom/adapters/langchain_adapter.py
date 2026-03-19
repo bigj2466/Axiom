@@ -1,6 +1,5 @@
 from typing import Any
 from .base import BaseAdapter
-from ..schemas import Prompt, Template
 
 class LangchainAdapter(BaseAdapter):
     """Translates Axiom ExecutionPlans into LangChain Runnables."""
@@ -16,25 +15,18 @@ class LangchainAdapter(BaseAdapter):
             
         chains = []
         for node_id, node in self._plan.nodes.items():
-            if not node.resolved_prompts:
+            if not node.messages:
                 continue
                 
-            for prompt_id in node.resolved_prompts:
-                prompt = self.registry.get(prompt_id)
-                if isinstance(prompt, Prompt) and prompt.extends:
-                    template = self.registry.get(prompt.extends)
-                    if isinstance(template, Template):
-                        lc_messages = []
-                        for msg in template.messages:
-                            lc_content = msg.content.replace("{{", "{").replace("}}", "}")
-                            
-                            if msg.role.value == "system":
-                                lc_messages.append(("system", lc_content))
-                            elif msg.role.value == "user":
-                                lc_messages.append(("user", lc_content))
-                                
-                        chat_prompt = ChatPromptTemplate.from_messages(lc_messages)
-                        chains.append(chat_prompt)
+            lc_messages = []
+            for msg in node.messages:
+                if msg["role"] == "system":
+                    lc_messages.append(("system", msg["content"]))
+                elif msg["role"] == "user":
+                    lc_messages.append(("user", msg["content"]))
+                    
+            chat_prompt = ChatPromptTemplate.from_messages(lc_messages)
+            chains.append(chat_prompt)
         
         if not chains:
             return None

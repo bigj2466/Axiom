@@ -42,22 +42,21 @@ def test_runtime_compiles_usecase():
     plan = engine.build("usecase.chat", inputs)
     
     assert plan.id == "plan.usecase.chat"
-    assert "node_skill_chat" in plan.nodes
+    assert "node_prompt_chat" in plan.nodes
     assert len(plan.edges) > 0
-    assert plan.nodes["node_skill_chat"].type == "skill"
-    assert "prompt.chat" in plan.nodes["node_skill_chat"].resolved_prompts
+    assert plan.nodes["node_prompt_chat"].type == "prompt"
     
-    # ZER0 API Calls have successfully yielded an execution plan
-    assert plan.resolved_inputs["query"] == "Tell me a joke."
+    node = plan.nodes["node_prompt_chat"]
+    assert len(node.messages) == 1
+    assert node.messages[0]["content"] == "You are helpful."
+    assert node.config["temperature"] == 0.5
 
 def test_runtime_fails_missing_inputs():
     r = get_test_registry()
     engine = AxiomRuntime(r)
     
-    # Missing base template context
     with pytest.raises(ValueError, match="Missing required input 'context'"):
         engine.build("prompt.chat", {"query": "Hello"})
         
-    # Missing direct prompt query
     with pytest.raises(ValueError, match="Missing required input 'query'"):
         engine.build("prompt.chat", {"context": "Hello"})

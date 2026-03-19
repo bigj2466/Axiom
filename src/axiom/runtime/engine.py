@@ -9,6 +9,13 @@ class AxiomRuntime:
     def __init__(self, registry: AxiomRegistry):
         self.registry = registry
 
+    def _render_content(self, content: str, variables: Dict[str, Any]) -> str:
+        """Simple template rendering replacing {{var}} with values."""
+        result = content
+        for k, v in variables.items():
+            result = result.replace(f"{{{{{k}}}}}", str(v))
+        return result
+
     def build(self, entrypoint_id: str, runtime_inputs: Dict[str, Any] = None) -> ExecutionPlan:
         runtime_inputs = runtime_inputs or {}
         
@@ -21,38 +28,61 @@ class AxiomRuntime:
         
         last_node_id = "start"
 
+        def _add_prompt_node(prompt_id: str, last_edge_from: str) -> str:
+            prompt = self.registry.get(prompt_id)
+            if not prompt or not isinstance(prompt, Prompt):
+                raise ValueError(f"Prompt '{prompt_id}' not found or invalid.")
+                
+            template = None
+            if prompt.extends:
+                template = self.registry.get(prompt.extends)
+                if not template or not isinstance(template, Template):
+                    raise ValueError(f"Base template '{prompt.extends}' for prompt '{prompt_id}' not found.")
+                    
+                for req_input in template.inputs.keys():
+                    if req_input not in runtime_inputs:
+                        raise ValueError(f"Missing required input '{req_input}' for inherited template '{template.id}'")
+            
+            for req_input in prompt.inputs.keys():
+                if req_input not in runtime_inputs:
+                    raise ValueError(f"Missing required input '{req_input}' for prompt '{prompt.id}'")
+
+            resolved_messages = []
+            if template and template.messages:
+                for msg in template.messages:
+                    rendered = self._render_content(msg.content, runtime_inputs)
+                    resolved_messages.append({"role": msg.role.value, "content": rendered})
+            
+            merged_config = prompt.config.model_dump(exclude_unset=True) if prompt.config else {}
+            
+            node_id = f"node_{prompt.id.replace('.', '_')}"
+            while node_id in nodes:
+                 node_id += "_next"
+                 
+            nodes[node_id] = ExecutionNode(
+                type="prompt",
+                ref=prompt.id,
+                messages=resolved_messages,
+                config=merged_config,
+                resolved_prompts=[prompt.id]
+            )
+            edges.append(ExecutionEdge(**{"from": last_edge_from, "to": node_id}))
+            return node_id
+
         if isinstance(entry, UseCase):
             for skill_id in entry.skills:
-                skill_node_id = f"node_{skill_id.replace('.', '_')}"
-                resolved_prompts = self._resolve_skill(skill_id, runtime_inputs)
-                
-                nodes[skill_node_id] = ExecutionNode(
-                    type="skill",
-                    ref=skill_id,
-                    resolved_prompts=resolved_prompts
-                )
-                edges.append(ExecutionEdge(**{"from": last_node_id, "to": skill_node_id}))
-                last_node_id = skill_node_id
-
+                skill = self.registry.get(skill_id)
+                if not skill or not isinstance(skill, Skill):
+                    raise ValueError(f"Skill '{skill_id}' not found.")
+                for prompt_id in (skill.prompts or []):
+                    last_node_id = _add_prompt_node(prompt_id, last_node_id)
+                    
         elif isinstance(entry, Skill):
-            skill_node_id = f"node_{entry.id.replace('.', '_')}"
-            resolved_prompts = self._resolve_skill(entry.id, runtime_inputs)
-            nodes[skill_node_id] = ExecutionNode(
-                type="skill",
-                ref=entry.id,
-                resolved_prompts=resolved_prompts
-            )
-            edges.append(ExecutionEdge(**{"from": last_node_id, "to": skill_node_id}))
-            
+            for prompt_id in (entry.prompts or []):
+                last_node_id = _add_prompt_node(prompt_id, last_node_id)
+                
         elif isinstance(entry, Prompt):
-            prompt_node_id = f"node_{entry.id.replace('.', '_')}"
-            self._resolve_prompt(entry.id, runtime_inputs)
-            nodes[prompt_node_id] = ExecutionNode(
-                type="prompt",
-                ref=entry.id,
-                resolved_prompts=[entry.id]
-            )
-            edges.append(ExecutionEdge(**{"from": last_node_id, "to": prompt_node_id}))
+            _add_prompt_node(entry.id, last_node_id)
 
         else:
             raise ValueError(f"Unsupported entrypoint type: {type(entry).__name__}")
@@ -64,35 +94,3 @@ class AxiomRuntime:
             edges=edges,
             resolved_inputs=runtime_inputs
         )
-
-    def _resolve_skill(self, skill_id: str, runtime_inputs: Dict[str, Any]) -> List[str]:
-        skill = self.registry.get(skill_id)
-        if not skill or not isinstance(skill, Skill):
-            raise ValueError(f"Skill '{skill_id}' not found or invalid.")
-            
-        if not skill.prompts:
-            return []
-            
-        for prompt_id in skill.prompts:
-            self._resolve_prompt(prompt_id, runtime_inputs)
-            
-        return skill.prompts
-
-    def _resolve_prompt(self, prompt_id: str, runtime_inputs: Dict[str, Any]):
-        prompt = self.registry.get(prompt_id)
-        if not prompt or not isinstance(prompt, Prompt):
-            raise ValueError(f"Prompt '{prompt_id}' not found or invalid.")
-            
-        if prompt.extends:
-            template = self.registry.get(prompt.extends)
-            if not template or not isinstance(template, Template):
-                raise ValueError(f"Base template '{prompt.extends}' for prompt '{prompt_id}' not found.")
-                
-            for req_input in template.inputs.keys():
-                if req_input not in runtime_inputs:
-                    raise ValueError(f"Missing required input '{req_input}' for inherited template '{template.id}'")
-        
-        # Check prompt-level schema mapped inputs
-        for req_input in prompt.inputs.keys():
-            if req_input not in runtime_inputs:
-                raise ValueError(f"Missing required input '{req_input}' for prompt '{prompt.id}'")

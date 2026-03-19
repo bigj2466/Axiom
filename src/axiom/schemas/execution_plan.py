@@ -4,6 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class ExecutionNode(BaseModel):
     type: str
     ref: str
+    messages: Optional[List[Dict[str, str]]] = None
+    config: Optional[Dict[str, Any]] = None
     resolved_prompts: Optional[List[str]] = None
 
 class ExecutionEdge(BaseModel):
