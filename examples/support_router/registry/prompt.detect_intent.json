@@ -1,0 +1,21 @@
+{
+  "id": "prompt.detect_intent",
+  "type": "prompt",
+  "version": "1.0.0",
+  "extends": "base.support_agent",
+  "inputs": {
+    "intent": { "type": "string" },
+    "user_id": { "type": "string" },
+    "query": { "type": "string" }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "Analyze the following query and classify intent into 'refund', 'shipping', or 'technical':\n\nQuery: {{query}}"
+    }
+  ],
+  "config": {
+    "temperature": 0.0,
+    "max_tokens": 10
+  }
+}

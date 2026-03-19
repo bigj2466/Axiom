@@ -1,0 +1,15 @@
+{
+  "id": "base.support_agent",
+  "type": "template",
+  "version": "1.0.0",
+  "inputs": {
+    "intent": { "type": "string" },
+    "user_id": { "type": "string" }
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a customer support agent. You are currently handling the '{{intent}}' subsystem for user {{user_id}}."
+    }
+  ]
+}

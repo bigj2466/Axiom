@@ -1,0 +1,19 @@
+{
+  "id": "workflow.support_router",
+  "type": "workflow",
+  "version": "1.0.1",
+  "nodes": {
+    "start": { "ref": "prompt.detect_intent@1.0.0" },
+    "refund": { "ref": "prompt.refund_handler@1.0.0" }
+  },
+  "edges": [
+    {
+      "from": "start",
+      "to": "refund",
+      "if": {
+        "var": "intent",
+        "equals": "refund"
+      }
+    }
+  ]
+}
