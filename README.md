@@ -81,15 +81,16 @@ Axiom is a lower layer:
 
 | Term | Meaning |
 |---|---|
-| **Prompt** | smallest text unit |
-| **Template** | parameterized prompt |
-| **Skill** | group of prompts / steps |
-| **UseCase** | group of skills |
-| **Workflow** | execution graph |
-| **Registry** | storage system |
-| **Adapter** | framework bridge |
-| **Schema** | structure definition |
-| **Runtime**| execution engine |
+| **Template** | reusable structured message blueprint |
+| **Prompt** | configured executable instance of a template |
+| **Skill** | execution strategy grouping prompts / steps |
+| **UseCase** | high-level composition solving an objective |
+| **Workflow** | branching execution graph (future) |
+| **ExecutionPlan** | the deterministic static graph yielded by runtime |
+| **Registry** | indexing, validation, and storage coordinator |
+| **Adapter** | translates execution plan to framework runtime |
+| **Schema** | typed json/yaml structure definitions |
+| **Runtime**| dependency resolver and execution planner |
 
 ## 5. Architecture
 
@@ -122,23 +123,41 @@ graph TD
 
 ## 6. Core Concepts
 
-### 6.1 Prompt
-Smallest unit.
+### 6.1 Template
+Lowest-level reusable primitive. Defines a structured message blueprint with roles.
+
+**Example:**
+```json
+{
+  "id": "summarize.base",
+  "type": "template",
+  "inputs": {
+    "text": { "type": "string" }
+  },
+  "messages": [
+    { "role": "system", "content": "You are a summarizing assistant." },
+    { "role": "user", "content": "Summarize:\n{{text}}" }
+  ]
+}
+```
+
+### 6.2 Prompt
+An executable instance derived from a Template. Binds specific parameters or overrides.
 
 **Example:**
 ```json
 {
   "id": "summarize.basic",
   "type": "prompt",
-  "template": "Summarize:\n{{text}}",
-  "inputs": ["text"],
-  "tags": ["summary"]
+  "extends": "summarize.base",
+  "inputs": {
+    "text": { "type": "string" }
+  },
+  "config": {
+    "temperature": 0.2
+  }
 }
 ```
-
-### 6.2 Template
-Prompt with parameters.  
-`template + inputs`
 
 ### 6.3 Skill (Hybrid design)
 Skill may contain:
@@ -152,6 +171,9 @@ Skill may contain:
 {
   "id": "summarize",
   "type": "skill",
+  "inputs": {
+    "text": { "type": "string" }
+  },
   "prompts": [
     "summarize.basic",
     "summarize.short"
@@ -196,26 +218,25 @@ Graph execution.
 
 ## 7. Schema Design
 
-Schema must be:
+Schema must be strict and typed for enterprise rigor:
 - JSON / YAML compatible
+- strictly validated (JSON Schema)
 - versioned
 - extensible
-- validated
 
 **Required fields:**
-- `id`
+- `id` (must follow strict namespace rules: `namespace.type.name`)
 - `type`
 - `version`
-- `inputs`
+- `inputs` (Must be typed schema, not flat string arrays)
 - `metadata`
 
 **Optional:**
-- `tags`
-- `config`
-- `steps`
-- `prompts`
-- `strategy`
-- `adapter`
+- `config` (Execution params like timeout wrapper, or Model params like temperature)
+- `capability` (Tags describing capabilities matching the indexer)
+- `messages` (For Templates)
+- `extends` (For Prompts inheriting Templates)
+- `steps` / `strategy` (For Skills)
 
 ## 8. Storage Format
 
@@ -292,7 +313,7 @@ sequenceDiagram
 
 ## 11. Adapter Layer
 
-Adapters convert Axiom objects to framework format.
+Adapters are strictly bridges that receive an explicitly defined `ExecutionPlan` from the Runtime and translate it into a framework-specific execution primitive (e.g., LCEL Runnables).
 
 **Example:**
 - Axiom → LangChain
@@ -301,11 +322,13 @@ Adapters convert Axiom objects to framework format.
 - Axiom → ContextFlow
 - Axiom → DSPy
 
-**Adapter API:**
+**Adapter API Contract:**
 ```python
-adapter.run(skill)
-adapter.to_messages()
-adapter.to_chain()
+plan = runtime.build("usecase.chat")
+
+adapter.ingest(plan)
+runnable = adapter.to_chain()
+result = runnable.invoke({"text": "example"})
 ```
 
 ## 12. Search & Index

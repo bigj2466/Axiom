@@ -3,24 +3,24 @@
 This document outlines the phased development plan for the Axiom Universal Prompt & Skill Runtime.
 
 ## Phase 1: Foundation (v0.1)
-*Goal: Core schemas, parsing, and exact validation.*
-- **Core Models:** Implement the base schema definitions using Pydantic (Python) or Zod (TS).
-- **Entities:** `Prompt`, `Skill`, and `UseCase` data models.
+*Goal: Core schemas, parsing, strict typing, and exact validation.*
+- **Core Models:** Implement the base schema definitions using Pydantic (Python) or Zod (TS). Establish full JSON Schema support for inputs and configs.
+- **Entities:** `Template` (with message/role arrays), `Prompt`, `Skill`, and `UseCase` data models.
 - **Registry Engine:** Build the `AxiomRegistry` to recursively load, index, and cache JSON/YAML definitions from a local file system.
-- **Dependency Resolution:** Ensure that when a `UseCase` is loaded, its dependent `Skill`s are verified.
+- **Dependency Resolution:** Ensure that when a `UseCase` is loaded, its dependent `Skill`s, `Prompt`s, and `Template`s are verified.
 
 ## Phase 2: Runtime Engine (v0.2)
 *Goal: Abstract Syntax Tree and Execution Plans.*
-- **Execution Planner:** Implement the `Runtime` to accept a `UseCase` ID and dynamically build a deterministic cross-framework `ExecutionPlan`.
-- **Variable Mapping:** Resolve `inputs` variables dynamically down the graph.
-- **Validation:** Assert that the Runtime purely configures the plan and makes *zero* API calls.
+- **Execution Planner:** Implement the `Runtime` to accept a `UseCase` ID and dynamically build a deterministic cross-framework `ExecutionPlan` structure containing nodes, edges, resolved variables, and configurations.
+- **Variable Mapping:** Resolve strongly-typed `inputs` and apply localized `configs` dynamically down the graph.
+- **Validation:** Assert that the Runtime purely outputs the `ExecutionPlan` JSON and makes *zero* API calls.
 
 ## Phase 3: Framework Adapters (v0.3)
 *Goal: Real-world framework integrations.*
-- **Adapter API:** Design the standard `BaseAdapter` interface.
+- **Adapter Contract:** Design the standard `BaseAdapter` interface built explicitly to ingest the `ExecutionPlan` output.
 - **LangChain Adapter:** Compile Axiom execution plans into LCEL Runnables.
 - **ContextFlow Adapter:** Compile execution plans into ContextFlow Pipelines.
-- **Raw API Adapter:** Implement standard OpenAI API translation.
+- **Raw API Adapter:** Implement standard OpenAI API translation supporting message arrays.
 
 ## Phase 4: Enterprise Workflows (v1.0)
 *Goal: High scale and complexity.*
